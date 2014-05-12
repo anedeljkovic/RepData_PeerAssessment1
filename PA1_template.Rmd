@@ -1,20 +1,156 @@
-# Reproducible Research: Peer Assessment 1
+Coursera Reproducible Research: Peer Assesment 1
+===============================================
 
-
+  
 ## Loading and preprocessing the data
 
+Load the data:
+```{r Loading the data, echo=TRUE}
+activity.data <- read.csv("data/activity.csv")          
+```
+Change `date` variable from factor to date
+```{r Preprocessing the data, echo=TRUE}
+activity.data$date <- as.Date(activity.data$date)          
+```
 
-
+  
 ## What is mean total number of steps taken per day?
 
+Make a histogram of the total number of steps taken each day:
+```{r Histogram of total number of steps, echo=TRUE}
+hist(activity.data$steps, main="Total no. of steps taken each day",
+     xlab="Steps taken")
+```
 
+Calculate the mean and median of total number of steps taken per day:
+```{r Mean and median, echo=TRUE}
+mean(activity.data$steps, na.rm=TRUE)
+median(activity.data$steps, na.rm=TRUE)
+```
 
+  
 ## What is the average daily activity pattern?
 
+Calculate average number of steps taken by interval:
+```{r Average steps by interval, echo=TRUE}
+steps.ave <- tapply(activity.data$steps, activity.data$interval, mean, 
+                    na.rm=TRUE)
+steps.ave <- as.numeric(steps.ave)
+```
 
+Make a time series plot:
+```{r Time series plot, echo=TRUE}
+plot(steps.ave ~ activity.data$interval[1:288], type="l", 
+     main="Average daily activity pattern", xlab="Interval", 
+     ylab="Average no. of steps")
+```
 
+Interval which conatains the maximum numbers of steps is:
+```{r Interval with max no. of steps, echo=TRUE}
+activity.data$interval[which.max(steps.ave)]
+```
+
+  
 ## Imputing missing values
 
+Calculate the total number of missing values in the dataset:
+```{r No. of missing values, echo=TRUE}
+sum(is.na(activity.data))
+```
 
+Replace missing values in the dataset with the mean for respective 5-minute interval:
+```{r Replace missing values, echo=TRUE}
+ave.steps.int <- rep(steps.ave, 61)
+new.activity.data <- cbind(activity.data, ave.steps.int)
 
+for (i in 1:nrow(new.activity.data)) {
+        
+        if (is.na(new.activity.data[i, 1])) {
+                
+                new.activity.data[i, 1] <- new.activity.data[i, 4]
+        
+        }        
+
+}
+```
+
+Create a new dataset that is equal to the original dataset but with the missing data filled in: 
+```{r New dataset, echo=TRUE}
+new.activity.data <- new.activity.data[ ,-4]
+head(activity.data)
+head(new.activity.data)
+```
+
+Make a histogram of the total number of steps taken each day:
+```{r Histogram of total number of steps (NAs filled in), echo=TRUE}
+hist(new.activity.data$steps, main="Histogram of Steps taken each day",
+     xlab="Steps taken")
+```
+
+Calculate the mean and median of total number of steps taken per day:
+```{r Mean and median of new dataset, echo=TRUE}
+mean(new.activity.data$steps)
+median(new.activity.data$steps)
+```
+
+Do these values differ from the estimates from the first part of the assignment? **No**  
+What is the impact of imputing missing data on the estimates of the total daily number of steps? **There is none**
+
+  
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day:
+```{r New factor variable, echo=TRUE}
+for (i in 1:nrow(new.activity.data)) {
+        
+        if (weekdays(new.activity.data[i, 2]) == "Saturday" 
+            | weekdays(new.activity.data[i, 2]) == "Sunday") {
+                
+                new.activity.data[i, 4] <- "weekend"
+        
+        } else {
+                
+                new.activity.data[i, 4] <- "weekday"
+        
+        }
+
+}
+
+names(new.activity.data)[4] <- "day.type"
+new.activity.data$day.type <- as.factor(new.activity.data$day.type)
+```
+
+Transform dataset for easier ploting:
+```{r Transform dataset for easier ploting, echo=TRUE}
+# Split dataset by day.type (weekday and weekend datasets)
+split.activity <- split(new.activity.data, new.activity.data$day.type)
+weekday <- split.activity[[1]]
+weekend <- split.activity[[2]]
+
+# Calculate average number of steps taken by interval for weekdays
+steps.weekday <- tapply(weekday$steps, weekday$interval, mean, 
+                        na.rm=TRUE)  
+
+# Calculate average number of steps taken by interval for weekends
+steps.weekend <- tapply(weekend$steps, weekend$interval, mean, 
+                        na.rm=TRUE)
+
+# Create new dataset for xyplot() function
+steps.weekday <- as.numeric(steps.weekday)
+steps.weekend <- as.numeric(steps.weekend)
+
+steps.weekday.int <- data.frame(steps=steps.weekday, 
+                                interval=new.activity.data$interval[1:288], 
+                                day.type=rep("weekday", 288))
+steps.weekend.int <- data.frame(steps=steps.weekend, 
+                                interval=new.activity.data$interval[1:288], 
+                                day.type=rep("weekend", 288))
+
+activity.day.type <- rbind(steps.weekday.int, steps.weekend.int)
+```
+
+Make a panel plot:
+```{r Panel plot, echo=TRUE}
+library(lattice)
+xyplot(activity.day.type$steps ~ activity.day.type$interval | activity.day.type$day.type, type="l", xlab="Interval", ylab="Number of steps", layout=c(1, 2))
+```
