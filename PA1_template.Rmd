@@ -22,7 +22,7 @@ hist(activity.data$steps, main="Total no. of steps taken each day",
      xlab="Steps taken")
 ```
 
-Calculate the mean and median of total number of steps taken per day:
+Calculate the mean and median of total no. of steps taken per day:
 ```{r Mean and median, echo=TRUE}
 mean(activity.data$steps, na.rm=TRUE)
 median(activity.data$steps, na.rm=TRUE)

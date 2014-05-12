@@ -29,7 +29,7 @@ hist(activity.data$steps, main = "Total no. of steps taken each day", xlab = "St
 ![plot of chunk Histogram of total number of steps](figure/Histogram_of_total_number_of_steps.png) 
 
 
-Calculate the mean and median of total number of steps taken per day:
+Calculate the mean and median of total no. of steps taken per day:
 
 ```r
 mean(activity.data$steps, na.rm = TRUE)
